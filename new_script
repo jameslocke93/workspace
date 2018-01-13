@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Creates a new script within trading_platform/src
+# Changes the script permissions to chmod
+# Creates a new log file for the script in trading_platform/logs
+# Adds the logs file path to the script as a variable $log
+# Create a config file for the script in trading_platform/config
+# Adds the config file path to the script as a variable $config
+# Creates and sets up a header file for each file if the project is cpp
+
+#Requires a single arguement and use that arguement as the script name
+[[ $# = 1 ]] || { echo Please provide a script name; exit 1; }
+file_path="$(pwd)/"
+script_name="${1}"
+file_ext=$(ls ${file_path}src/Main* | grep -Po '(?<=\.).*')
+script_path="${file_path}src/${script_name}.${file_ext}"
+
+#Check if the script already exist
+[[ -e $script_path ]] && { echo Script already exists; exit 2; }
+
+#Create the log file for the script
+log_path="${file_path}logs/${script_name}.log"
+[[ -e ${log_path} ]] && { echo Log file exists; exit 3; }
+
+#Create the config file for the script
+config_path="${file_path}config/${script_name}.config"
+[[ -e ${config_path} ]] && { echo config file exists; exit 4; }
+
+#Create the test file for the script
+test_path="${file_path}test/test_${script_name}.${file_ext}"
+[[ -e ${test_path} ]] && { echo test file exists; exit 11; }
+
+#Create the header file 
+header_path="${file_path}header/${script_name}.h"
+[[ -e ${header_path} ]] && { echo header file exists; exit 14; }
+
+touch ${script_path} && echo ${script_path} created || { echo script could not be created; exit 5; }
+touch ${log_path} && echo ${log_path} created || { echo log could not be created; exit 6; }
+touch ${config_path} && echo ${config_path} created || { echo congig could not be created; exit 7; }
+touch ${test_path} && echo ${test_path} created || { echo test could not be created; exit 12; }
+
+#Change the permissions of the files
+chmod 740 ${script_path} || { echo Could not change permissions of script; exit 8; }
+chmod 664 ${log_path} || { echo Could not change permissions of log file; exit 9; }
+chmod 664 ${config_path} || { echo Could not change permissions of config file; exit 10; }
+chmod 664 ${test_path} || { echo Could not change permissions of test file; exit 13; }
+
+#Write the log file and config file to the script
+echo -e "log_file=\"${log_path}\"\nconfig_file=\"${config_path}\"\n" > ${script_path}
+
+class_name=$(echo $(echo ${script_name} | head -c 1 | tr '[:lower:]' '[:upper:]')$(echo $(echo $script_name | cut -d. -f1) | sed 's/^\s*.//'))
+
+if [[ ${file_ext} == 'py' ]]; then
+	echo -e "import unittest" >> ${test_path}
+	echo -e "from $(echo ${script_name} | cut -d. -f1) import ${class_name}\n\n" >> ${test_path}
+	echo -e "class ${class_name}(unittest.TestCase):\n\t" >> ${test_path}
+elif [[ ${file_ext} == 'cpp' ]]; then
+	#Create the header file 
+	touch ${header_path} && echo ${header_path} created || { echo header could not be created; exit 15; }
+	chmod 740 ${header_path} || { echo Could not change permissions of header file; exit 16; }
+	#Set up header file syntax
+	echo -e "#ifndef ${class_name}_H\n#define ${class_name}_H\n\nclass ${class_name} {\n  private:\n\n  public:\n};\n#endif" >> ${header_path}
+	#Set up src file syntax
+	echo -e "#include \"${class_name}.h\"\n" >> ${script_path}
+fi
