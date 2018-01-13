@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Creates a new script within trading_platform/src
+# Creates a new script within /src
 # Changes the script permissions to chmod
 # Creates a new log file for the script in trading_platform/logs
 # Adds the logs file path to the script as a variable $log
@@ -40,7 +40,7 @@ touch ${config_path} && echo ${config_path} created || { echo congig could not b
 touch ${test_path} && echo ${test_path} created || { echo test could not be created; exit 12; }
 
 #Change the permissions of the files
-chmod 740 ${script_path} || { echo Could not change permissions of script; exit 8; }
+chmod 777 ${script_path} || { echo Could not change permissions of script; exit 8; }
 chmod 664 ${log_path} || { echo Could not change permissions of log file; exit 9; }
 chmod 664 ${config_path} || { echo Could not change permissions of config file; exit 10; }
 chmod 664 ${test_path} || { echo Could not change permissions of test file; exit 13; }
